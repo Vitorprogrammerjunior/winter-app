@@ -12,37 +12,37 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
 
-// Tipagem conforme seu backend (Laravel)
-interface ClimaBackendData {
+interface WeatherData {
   atual: {
     cidade: string
-    estado: string
+    pais: string
     atualizado_em: string
     condicoes: {
       temperatura: number
-      condicao: string
+      condicao_texto: string
+      icone: string
       umidade: number
-      intensidade_vento: number
-      direcao_vento: string
-      pressao: number
+      vento_kph: number
+      pressao_mb: number
       sensacao_termica: number
     }
   }
-  previsao: {
-    cidade: string
-    estado: string
-    previsao: Array<{
-      data: string
-      condicao: string
-      icone: string
-      temperatura: { minima: number; maxima: number }
-      chuva: { probabilidade: number; precipitacao: number }
-    }>
-  }
+  previsao: Array<{
+    data: string
+    condicao: string
+    icone: string
+    temp_max: number
+    temp_min: number
+    chance_chuva: number
+    precipitacao_mm: number
+  }>
 }
 
 interface WeatherDashboardProps {
-  initialData: ClimaBackendData
+  initialData: {
+    atual: WeatherData['atual']
+    previsao: WeatherData['previsao']
+  }
 }
 
 export default function WeatherDashboard({ initialData }: WeatherDashboardProps) {
@@ -52,7 +52,6 @@ export default function WeatherDashboard({ initialData }: WeatherDashboardProps)
   const [unit, setUnit] = useState<"celsius" | "fahrenheit">("celsius")
   const { toast } = useToast()
 
-  // Busca de cidade
   const handleSearch = async (e: FormEvent) => {
     e.preventDefault()
     if (!searchQuery.trim()) return
@@ -63,7 +62,6 @@ export default function WeatherDashboard({ initialData }: WeatherDashboardProps)
       if (!res.ok) throw new Error(`Status ${res.status}`)
       const json = await res.json()
       if (!json.sucesso) throw new Error(json.erro || "Erro na API")
-      // recarrega passando novos dados
       window.location.reload()
     } catch (err: any) {
       toast({ title: "Erro", description: err.message || "Falha ao buscar cidade", variant: "destructive" })
@@ -71,6 +69,11 @@ export default function WeatherDashboard({ initialData }: WeatherDashboardProps)
   }
 
   const toggleDetails = () => setShowDetails(!showDetails)
+
+  // Extrair código do ícone da URL
+  const getIconCode = (iconUrl: string) => {
+    return parseInt(iconUrl.split('/').pop()?.split('.')[0] || '1000')
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
@@ -107,23 +110,14 @@ export default function WeatherDashboard({ initialData }: WeatherDashboardProps)
             <div className="lg:col-span-2">
               <WeatherCard
                 location={{
-                  name: atual.cidade,
-                  country: atual.estado,
-                  region: atual.estado,
+                  cidade: atual.cidade,
+                  pais: atual.pais
                 }}
                 current={{
-                  temp_c: atual.condicoes.temperatura,
-                  temp_f: (atual.condicoes.temperatura * 9) / 5 + 32,
-                  condition: { text: atual.condicoes.condicao, code: 0 },
-                  wind_kph: atual.condicoes.intensidade_vento,
-                  humidity: atual.condicoes.umidade,
-                  feelslike_c: atual.condicoes.sensacao_termica,
-                  uv: atual.condicoes.sensacao_termica,
-                  pressure_mb: atual.condicoes.pressao,
-                  vis_km: 0,
-                  air_quality: {
-                    "us-epa-index": 0,
-                  },
+                  condicoes: {
+                    ...atual.condicoes,
+                    icone: atual.condicoes.icone
+                  }
                 }}
                 unit={unit}
                 onUnitChange={(u) => setUnit(u)}
@@ -141,11 +135,11 @@ export default function WeatherDashboard({ initialData }: WeatherDashboardProps)
                   </Button>
                 </div>
 
-<ForecastSection 
-  forecast={previsao.previsao}  // passa o Array de dias, não o objeto inteiro
-  unit={unit} 
-  showDetails={showDetails} 
-/>
+                <ForecastSection 
+                  forecast={previsao}
+                  unit={unit} 
+                  showDetails={showDetails} 
+                />
               </div>
             </div>
 
@@ -154,11 +148,11 @@ export default function WeatherDashboard({ initialData }: WeatherDashboardProps)
                 <div className="p-6">
                   <h2 className="text-xl font-semibold text-slate-800 dark:text-white mb-4 flex items-center">
                     <MapPin className="h-5 w-5 mr-2 text-sky-500" />
-                    {atual.cidade}, {atual.estado}
+                    {atual.cidade}, {atual.pais}
                   </h2>
 
                   <div className="relative h-48 mb-6">
-                    <WeatherAnimation condition={0} />
+                    <WeatherAnimation condition={getIconCode(atual.condicoes.icone)} />
                   </div>
 
                   <Tabs defaultValue="details">
@@ -169,24 +163,19 @@ export default function WeatherDashboard({ initialData }: WeatherDashboardProps)
 
                     <TabsContent value="details">
                       <WeatherDetails current={{
-                        temp_c: atual.condicoes.temperatura,
-                        temp_f: (atual.condicoes.temperatura * 9) / 5 + 32,
-                        condition: { text: atual.condicoes.condicao, code: 0 },
-                        wind_kph: atual.condicoes.intensidade_vento,
-                        humidity: atual.condicoes.umidade,
-                        feelslike_c: atual.condicoes.sensacao_termica,
-                        uv: atual.condicoes.sensacao_termica,
-                        pressure_mb: atual.condicoes.pressao,
-                        vis_km: 0,
-                        air_quality: { "us-epa-index": 0 },
+                        condicoes: {
+                          ...atual.condicoes,
+                          vento_kph: atual.condicoes.vento_kph,
+                          pressao_mb: atual.condicoes.pressao_mb
+                        }
                       }} />
                     </TabsContent>
 
-                   <TabsContent value="hourly">
-                    <div className="p-4 text-center text-slate-600 dark:text-slate-400">
-                      Dados horários não disponíveis
-                    </div>
-                  </TabsContent>
+                    <TabsContent value="hourly">
+                      <div className="p-4 text-center text-slate-600 dark:text-slate-400">
+                        Dados horários não disponíveis
+                      </div>
+                    </TabsContent>
                   </Tabs>
                 </div>
               </div>

@@ -2,45 +2,51 @@
 
 import React from "react"
 import { motion } from "framer-motion"
-import { MapPin, Thermometer, Wind, Droplets } from "lucide-react"
+import { MapPin, Thermometer, Wind, Droplets, Gauge } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { getWeatherIcon, getWeatherBackground } from "@/lib/weather-utils"
 
 interface WeatherCardProps {
   location: {
-    name: string
-    country: string
-    region: string
+    cidade: string
+    pais: string
   }
   current: {
-    temp_c: number
-    temp_f: number
-    condition: {
-      text: string
-      code: number
+    condicoes?: { // Adicionado optional chaining
+      temperatura: number
+      condicao_texto: string
+      icone?: string // Campo opcional
+      umidade: number
+      vento_kph: number
+      pressao_mb: number
+      sensacao_termica: number
     }
-    wind_kph: number
-    humidity: number
-    feelslike_c: number
   }
   unit: "celsius" | "fahrenheit"
   onUnitChange: (unit: "celsius" | "fahrenheit") => void
 }
 
 export default function WeatherCard({ location, current, unit, onUnitChange }: WeatherCardProps) {
-  const WeatherIcon = getWeatherIcon(current.condition.code)
-  const backgroundClass = getWeatherBackground(current.condition.code)
+  // Verificação de segurança para condicoes
+  if (!current?.condicoes) {
+    return <div className="rounded-xl shadow-lg bg-gray-200 dark:bg-slate-800 p-6 animate-pulse" />
+  }
 
-  const temperature =
-    unit === "celsius"
-      ? `${Math.round(current.temp_c)}°C`
-      : `${Math.round(current.temp_f)}°F`
+  // Extração segura do código do ícone
+  const iconCode = current.condicoes.icone 
+    ? parseInt(current.condicoes.icone.split('/').pop()?.split('.')[0] || '1000')
+    : 1000 // Valor padrão
 
-  const feelsLike =
-    unit === "celsius"
-      ? `${Math.round(current.feelslike_c)}°C`
-      : `${Math.round((current.feelslike_c * 9) / 5 + 32)}°F`
+  const WeatherIcon = getWeatherIcon(iconCode)
+  const backgroundClass = getWeatherBackground(iconCode)
 
+  const temperature = unit === "celsius"
+    ? `${Math.round(current.condicoes.temperatura)}°C`
+    : `${Math.round((current.condicoes.temperatura * 9) / 5 + 32)}°F`
+
+  const feelsLike = unit === "celsius"
+    ? `${Math.round(current.condicoes.sensacao_termica)}°C`
+    : `${Math.round((current.condicoes.sensacao_termica * 9) / 5 + 32)}°F`
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -53,10 +59,10 @@ export default function WeatherCard({ location, current, unit, onUnitChange }: W
           <div>
             <div className="flex items-center mb-2">
               <MapPin className="h-5 w-5 mr-2" />
-              <h2 className="text-2xl font-bold">{location.name}</h2>
+              <h2 className="text-2xl font-bold capitalize">{location.cidade}</h2>
             </div>
             <p className="text-sm opacity-90 mb-4">
-              {location.region}, {location.country}
+              {location.pais}
             </p>
           </div>
 
@@ -100,7 +106,7 @@ export default function WeatherCard({ location, current, unit, onUnitChange }: W
             </div>
             <div className="ml-4">
               <h3 className="text-5xl font-bold">{temperature}</h3>
-              <p className="text-lg opacity-90">{current.condition.text}</p>
+              <p className="text-lg opacity-90 capitalize">{current.condicoes.condicao_texto}</p>
             </div>
           </div>
 
@@ -114,13 +120,25 @@ export default function WeatherCard({ location, current, unit, onUnitChange }: W
             <div className="flex flex-col items-center bg-white/10 rounded-lg p-3">
               <Wind className="h-5 w-5 mb-1" />
               <span className="text-sm opacity-80">Vento</span>
-              <span className="font-medium">{current.wind_kph} km/h</span>
+              <span className="font-medium">
+                {current.condicoes.vento_kph} km/h
+              </span>
             </div>
 
             <div className="flex flex-col items-center bg-white/10 rounded-lg p-3">
               <Droplets className="h-5 w-5 mb-1" />
               <span className="text-sm opacity-80">Umidade</span>
-              <span className="font-medium">{current.humidity}%</span>
+              <span className="font-medium">
+                {current.condicoes.umidade}%
+              </span>
+            </div>
+
+            <div className="flex flex-col items-center bg-white/10 rounded-lg p-3">
+              <Gauge className="h-5 w-5 mb-1" />
+              <span className="text-sm opacity-80">Pressão</span>
+              <span className="font-medium">
+                {current.condicoes.pressao_mb} mb
+              </span>
             </div>
           </div>
         </div>

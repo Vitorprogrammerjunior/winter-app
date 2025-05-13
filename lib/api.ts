@@ -37,7 +37,7 @@ export async function fetchWeather(
   lon: number,
   dias: number
 ): Promise<WeatherResponse> {
-  const base = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api"
+  const base = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/"
   const url = `${base}/weather?lat=${lat}&lon=${lon}&dias=${dias}`
   const res = await fetch(url, { headers: { Accept: "application/json" } })
   if (!res.ok) {

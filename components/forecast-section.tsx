@@ -6,17 +6,36 @@ import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { getWeatherIcon } from "@/lib/weather-utils"
 
-interface ForecastProps {
-  forecast: Array<{
-    date: string
-    day: { maxtemp_c: number; mintemp_c: number; condition: { text: string; code: number } }
-    hour: Array<{ time: string; temp_c: number; condition: { text: string; code: number } }>
+interface ForecastDay {
+  date: string
+  day: {
+    condition: {
+      code: number
+      text: string
+    }
+    maxtemp_c: number
+    mintemp_c: number
+  }
+  hour: Array<{
+    time: string
+    temp_c: number
+    condition: {
+      code: number
+    }
   }>
-  unit: "celsius" | "fahrenheit"
-  showDetails: boolean
 }
 
-export default function ForecastSection({ forecast, unit, showDetails }: ForecastProps) {
+interface ForecastSectionProps {
+  forecast?: ForecastDay[]
+  unit?: "celsius" | "fahrenheit"
+  showDetails?: boolean
+}
+
+export default function ForecastSection({ 
+  forecast, 
+  unit = "celsius", 
+  showDetails = false 
+}: ForecastSectionProps) {
   const container = {
     hidden: { opacity: 0 },
     show: {
@@ -30,8 +49,22 @@ export default function ForecastSection({ forecast, unit, showDetails }: Forecas
     show: { opacity: 1, y: 0 }
   }
 
+  // Verificação de segurança para dados ausentes
+  if (!forecast || forecast.length === 0) {
+    return (
+      <div className="text-center py-4 text-slate-500 dark:text-slate-400">
+        Dados de previsão não disponíveis
+      </div>
+    )
+  }
+
   return (
-    <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
+    <motion.div 
+      variants={container} 
+      initial="hidden" 
+      animate="show" 
+      className="space-y-4"
+    >
       {forecast.map((day, index) => {
         const dateObj = new Date(day.date)
         const formattedDate = format(dateObj, "EEEE, d 'de' MMMM", { locale: ptBR })
@@ -79,7 +112,7 @@ export default function ForecastSection({ forecast, unit, showDetails }: Forecas
                 <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                   <div className="flex overflow-x-auto pb-2 -mx-4 px-4 space-x-4">
                     {day.hour
-                      .filter((_, idx) => idx % 3 === 0)
+                      ?.filter((_, idx) => idx % 3 === 0)
                       .map((hour, idx) => {
                         const hourTime = new Date(hour.time).getHours()
                         const formattedTime = `${hourTime}:00`
