@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react"
 import { motion } from "framer-motion"
 import { MapPin, Thermometer, Wind, Droplets } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -23,17 +24,22 @@ interface WeatherCardProps {
     feelslike_c: number
   }
   unit: "celsius" | "fahrenheit"
-  onUnitChange: (unit: string) => void
+  onUnitChange: (unit: "celsius" | "fahrenheit") => void
 }
 
 export default function WeatherCard({ location, current, unit, onUnitChange }: WeatherCardProps) {
   const WeatherIcon = getWeatherIcon(current.condition.code)
   const backgroundClass = getWeatherBackground(current.condition.code)
 
-  const temperature = unit === "celsius" ? `${Math.round(current.temp_c)}°C` : `${Math.round(current.temp_f)}°F`
+  const temperature =
+    unit === "celsius"
+      ? `${Math.round(current.temp_c)}°C`
+      : `${Math.round(current.temp_f)}°F`
 
   const feelsLike =
-    unit === "celsius" ? `${Math.round(current.feelslike_c)}°C` : `${Math.round((current.feelslike_c * 9) / 5 + 32)}°F`
+    unit === "celsius"
+      ? `${Math.round(current.feelslike_c)}°C`
+      : `${Math.round((current.feelslike_c * 9) / 5 + 32)}°F`
 
   return (
     <motion.div
@@ -59,7 +65,11 @@ export default function WeatherCard({ location, current, unit, onUnitChange }: W
               size="sm"
               variant={unit === "celsius" ? "default" : "outline"}
               onClick={() => onUnitChange("celsius")}
-              className={unit === "celsius" ? "bg-white/20 hover:bg-white/30" : "bg-white/10 hover:bg-white/20"}
+              className={
+                unit === "celsius"
+                  ? "bg-white/20 hover:bg-white/30"
+                  : "bg-white/10 hover:bg-white/20"
+              }
             >
               °C
             </Button>
@@ -67,7 +77,11 @@ export default function WeatherCard({ location, current, unit, onUnitChange }: W
               size="sm"
               variant={unit === "fahrenheit" ? "default" : "outline"}
               onClick={() => onUnitChange("fahrenheit")}
-              className={unit === "fahrenheit" ? "bg-white/20 hover:bg-white/30" : "bg-white/10 hover:bg-white/20"}
+              className={
+                unit === "fahrenheit"
+                  ? "bg-white/20 hover:bg-white/30"
+                  : "bg-white/10 hover:bg-white/20"
+              }
             >
               °F
             </Button>
@@ -81,7 +95,7 @@ export default function WeatherCard({ location, current, unit, onUnitChange }: W
               <motion.div
                 className="absolute inset-0"
                 animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
               />
             </div>
             <div className="ml-4">
