@@ -7,20 +7,13 @@ import { ptBR } from "date-fns/locale"
 import { getWeatherIcon } from "@/lib/weather-utils"
 
 interface ForecastDay {
-  data: string  // Alterado para corresponder à API
+  data: string
   condicao: string
   icone: string
   temp_max: number
   temp_min: number
   chance_chuva: number
   precipitacao_mm: number
-  hour?: Array<{ // Adicionado campo hour se necessário
-    time: string
-    temp_c: number
-    condition: {
-      code: number
-    }
-  }>
 }
 
 interface ForecastSectionProps {
@@ -55,12 +48,24 @@ export default function ForecastSection({
     )
   }
 
-  // Função segura para parse de datas
-  const parseDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return isNaN(date.getTime()) ? new Date() : date
-  }
 
+const parseDate = (dateString: string) => {
+  const date = new Date(dateString + "T00:00:00-03:00"); // Fuso BR
+  return isNaN(date.getTime()) ? new Date() : date;
+};
+
+
+  // Adicione esta função fora do componente
+const isToday = (date: Date) => {
+  const today = new Date();
+  return (
+    date.getDate() === today.getDate() &&
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear()
+  );
+};
+
+// Dentro do componente, modifique:
   return (
     <motion.div 
       variants={container} 
@@ -69,11 +74,11 @@ export default function ForecastSection({
       className="space-y-4"
     >
       {forecast.map((day, index) => {
-        const dateObj = parseDate(day.data) // Usando data da API
+        const dateObj = parseDate(day.data)
         const formattedDate = format(dateObj, "EEEE, d 'de' MMMM", { locale: ptBR })
         
-        // Extrai código do ícone da URL da API
-        const iconCode = parseInt(day.icone.split('/').pop()?.split('.')[0] || '1000')
+        const iconPath = day.icone.split('/')
+        const iconCode = iconPath[iconPath.length - 1].split('.')[0]
         const WeatherIcon = getWeatherIcon(iconCode)
 
         const maxTemp = unit === "celsius"
@@ -94,7 +99,7 @@ export default function ForecastSection({
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-medium text-slate-800 dark:text-white capitalize">
-                    {index === 0 ? "Hoje" : formattedDate}
+                    {isToday(dateObj) ? "Hoje" : formattedDate}
                   </h3>
                   <p className="text-sm text-slate-500 dark:text-slate-400">
                     {day.condicao}
@@ -114,32 +119,11 @@ export default function ForecastSection({
                 </div>
               </div>
 
-              {showDetails && day.hour && (
-                <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-                  <div className="flex overflow-x-auto pb-2 -mx-4 px-4 space-x-4">
-                    {day.hour
-                      .filter((_, idx) => idx % 3 === 0)
-                      .map((hour, idx) => {
-                        const hourTime = parseDate(hour.time)
-                        const formattedTime = format(hourTime, "HH':'mm", { locale: ptBR })
-                        const HourIcon = getWeatherIcon(hour.condition.code)
-
-                        const hourTemp = unit === "celsius"
-                          ? `${Math.round(hour.temp_c)}°`
-                          : `${Math.round((hour.temp_c * 9) / 5 + 32)}°`
-
-                        return (
-                          <div key={idx} className="flex flex-col items-center min-w-[60px]">
-                            <span className="text-sm text-slate-500 dark:text-slate-400 mb-1">
-                              {formattedTime}
-                            </span>
-                            <HourIcon className="h-6 w-6 text-sky-500 my-1" />
-                            <span className="font-medium text-slate-800 dark:text-white">
-                              {hourTemp}
-                            </span>
-                          </div>
-                        )
-                      })}
+              {showDetails && (
+                <div className="mt-2 text-sm">
+                  <div className="flex justify-between text-slate-600 dark:text-slate-300">
+                    <span>Chance de chuva: {day.chance_chuva}%</span>
+                    <span>Precipitação: {day.precipitacao_mm}mm</span>
                   </div>
                 </div>
               )}

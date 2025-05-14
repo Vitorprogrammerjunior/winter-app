@@ -157,9 +157,7 @@ export default function WeatherDashboard({ initialData }: WeatherDashboardProps)
                       <TabsTrigger value="details" className="flex-1">
                         Detalhes
                       </TabsTrigger>
-                      <TabsTrigger value="hourly" className="flex-1">
-                        Horário
-                      </TabsTrigger>
+                     
                     </TabsList>
 
                     <TabsContent value="details">
@@ -172,11 +170,7 @@ export default function WeatherDashboard({ initialData }: WeatherDashboardProps)
                       />
                     </TabsContent>
 
-                    <TabsContent value="hourly">
-                      <div className="p-4 text-center text-slate-600 dark:text-slate-400">
-                        Dados horários não disponíveis
-                      </div>
-                    </TabsContent>
+                   
                   </Tabs>
                 </div>
               </div>

@@ -14,6 +14,7 @@ class Weather extends Model
         'icon',
         'humidity',
         'wind_kph',
-        'last_updated'
+        'last_updated',
+        
     ];
 }

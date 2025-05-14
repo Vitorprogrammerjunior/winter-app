@@ -10,7 +10,7 @@ interface WeatherDetailsProps {
       umidade: number
       sensacao_termica: number
       pressao_mb: number
-      visibilidade_km?: number
+      visibilidade?: number
       indice_uv?: number
     }
     cidade: string
@@ -43,7 +43,7 @@ export default function WeatherDetails({ current }: WeatherDetailsProps) {
     {
       icon: <Eye className="h-5 w-5 text-sky-500" />,
       label: "Visibilidade",
-      value: `${current.condicoes.visibilidade_km || 0} km`,
+      value: `${current.condicoes.visibilidade || 0} km`,
     },
     {
       icon: <Sun className="h-5 w-5 text-sky-500" />,

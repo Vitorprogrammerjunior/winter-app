@@ -99,7 +99,8 @@ class WeatherApiService
                     'direcao_vento' => $data['current']['wind_dir'] ?? 'N/D',
                     'pressao_mb' => $data['current']['pressure_mb'] ?? 0,
                     'sensacao_termica' => $data['current']['feelslike_c'] ?? 0,
-                    'indice_uv' => $data['current']['uv'] ?? 0, // Adicionar esta linha
+                    'indice_uv' => $data['current']['uv'] ?? 0,
+                    'visibilidade' => $data['current']['vis_km'] ?? 0, // Adicionar esta linha
                 ]
             ];
         });
@@ -135,6 +136,7 @@ class WeatherApiService
                     'chance_chuva' => $day['day']['daily_chance_of_rain'] ?? 0,
                     'precipitacao_mm' => $day['day']['totalprecip_mm'] ?? 0,
                     'indice_uv' => $day['day']['uv'] ?? 0, // Adicionar esta linha
+                    'visibilidade' => $day['day']['vis_km'] ?? 0, // Adicionar esta linha' 
                 ];
             }, $data['forecast']['forecastday'] ?? []);
         });
