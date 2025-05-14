@@ -16,7 +16,6 @@ interface WeatherData {
   atual: {
     cidade: string
     pais: string
-    atualizado_em: string
     condicoes: {
       temperatura: number
       condicao_texto: string
@@ -39,10 +38,7 @@ interface WeatherData {
 }
 
 interface WeatherDashboardProps {
-  initialData: {
-    atual: WeatherData['atual']
-    previsao: WeatherData['previsao']
-  }
+  initialData: WeatherData
 }
 
 export default function WeatherDashboard({ initialData }: WeatherDashboardProps) {
@@ -64,15 +60,18 @@ export default function WeatherDashboard({ initialData }: WeatherDashboardProps)
       if (!json.sucesso) throw new Error(json.erro || "Erro na API")
       window.location.reload()
     } catch (err: any) {
-      toast({ title: "Erro", description: err.message || "Falha ao buscar cidade", variant: "destructive" })
+      toast({ 
+        title: "Erro", 
+        description: err.message || "Falha ao buscar cidade", 
+        variant: "destructive" 
+      })
     }
   }
 
   const toggleDetails = () => setShowDetails(!showDetails)
 
-  // Extrair código do ícone da URL
   const getIconCode = (iconUrl: string) => {
-    return parseInt(iconUrl.split('/').pop()?.split('.')[0] || '1000')
+    return parseInt(iconUrl?.split('/').pop()?.split('.')[0] || '1000')
   }
 
   return (
@@ -109,24 +108,22 @@ export default function WeatherDashboard({ initialData }: WeatherDashboardProps)
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
               <WeatherCard
-                location={{
-                  cidade: atual.cidade,
-                  pais: atual.pais
-                }}
-                current={{
-                  condicoes: {
-                    ...atual.condicoes,
-                    icone: atual.condicoes.icone
-                  }
-                }}
+                data={initialData}
                 unit={unit}
-                onUnitChange={(u) => setUnit(u)}
+                onUnitChange={setUnit}
               />
 
               <div className="mt-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-slate-800 dark:text-white">Previsão para 5 dias</h2>
-                  <Button variant="ghost" size="sm" onClick={toggleDetails} className="flex items-center gap-1">
+                  <h2 className="text-xl font-semibold text-slate-800 dark:text-white">
+                    Previsão para 5 dias
+                  </h2>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={toggleDetails} 
+                    className="flex items-center gap-1"
+                  >
                     {showDetails ? (
                       <>Menos detalhes <ChevronUp className="h-4 w-4" /></>
                     ) : (
@@ -157,18 +154,22 @@ export default function WeatherDashboard({ initialData }: WeatherDashboardProps)
 
                   <Tabs defaultValue="details">
                     <TabsList className="w-full mb-4">
-                      <TabsTrigger value="details" className="flex-1">Detalhes</TabsTrigger>
-                      <TabsTrigger value="hourly" className="flex-1">Horário</TabsTrigger>
+                      <TabsTrigger value="details" className="flex-1">
+                        Detalhes
+                      </TabsTrigger>
+                      <TabsTrigger value="hourly" className="flex-1">
+                        Horário
+                      </TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="details">
-                      <WeatherDetails current={{
-                        condicoes: {
-                          ...atual.condicoes,
-                          vento_kph: atual.condicoes.vento_kph,
-                          pressao_mb: atual.condicoes.pressao_mb
-                        }
-                      }} />
+                      <WeatherDetails 
+                        current={{
+                          condicoes: atual.condicoes,
+                          cidade: atual.cidade,
+                          pais: atual.pais
+                        }}
+                      />
                     </TabsContent>
 
                     <TabsContent value="hourly">

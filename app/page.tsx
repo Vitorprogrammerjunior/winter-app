@@ -6,6 +6,7 @@ import SplashScreen from "@/components/splash-screen"
 import WeatherDashboard from "@/components/weather-dashboard"
 import { fetchWeather } from "@/lib/api"
 
+// Interface corrigida (remova 'sucesso' e 'dados')
 interface WeatherData {
   sucesso: boolean
   dados?: {
@@ -37,25 +38,61 @@ interface WeatherData {
 }
 
 export default function Home() {
-  const [weatherData, setWeatherData] = useState<WeatherResponse | null>(null)
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [coords, setCoords] = useState<{ lat: number; lon: number } | null>(null)
+
+  useEffect(() => {
+      const UseDefaultLocation = () => {
+      // Coordenadas padrão (Alegre-ES)
+      setCoords({ lat: -20.7629, lon: -41.5336 })
+    }
+
+    const getLocation = () => {
+      if (!navigator.geolocation) {
+        setError("Geolocalização não é suportada pelo seu navegador")
+        UseDefaultLocation()
+        return
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCoords({
+            lat: position.coords.latitude,
+            lon: position.coords.longitude
+          })
+        },
+        (error) => {
+          console.warn('Erro na geolocalização:', error)
+          setError("Não foi possível obter sua localização")
+          UseDefaultLocation()
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0
+        }
+      )
+    }
+
+  
+    getLocation()
+  }, [])
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const lat = -20.8972
-        const lon = -41.5200 // Corrigido nome da variável
-        const dias = 5
+      if (!coords) return
 
-        const data = await fetchWeather(lat, lon, dias)
+      try {
+        const data = await fetchWeather(coords.lat, coords.lon, 5)
         
-        // Verificação correta das propriedades
         if (!data.sucesso || !data.dados) {
-          throw new Error(data.erro || "Falha ao obter dados meteorológicos")
+          throw new Error(data.erro || "Dados meteorológicos inválidos")
         }
 
         setWeatherData(data)
+        setError(null)
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erro desconhecido")
       } finally {
@@ -64,7 +101,8 @@ export default function Home() {
     }
 
     fetchData()
-  }, [])
+  }, [coords])
+
   if (loading) {
     return <LoadingWeather />
   }
@@ -79,6 +117,7 @@ export default function Home() {
     )
   }
 
+  // Verificação final após o carregamento
   if (!weatherData?.dados) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -89,15 +128,15 @@ export default function Home() {
     )
   }
 
-  return (
-    <main className="min-h-screen bg-gradient-to-b from-sky-100 to-sky-50 dark:from-slate-900 dark:to-slate-800">
-      <SplashScreen />
-      <WeatherDashboard 
-        initialData={{
-          atual: weatherData.dados.atual,
-          previsao: weatherData.dados.previsao
-        }}
-      />
-    </main>
-  )
+return (
+  <main className="min-h-screen bg-gradient-to-b from-sky-100 to-sky-50 dark:from-slate-900 dark:to-slate-800">
+    <SplashScreen />
+     <WeatherDashboard 
+      initialData={{
+        atual: weatherData.dados.atual, // Acessa através de dados
+        previsao: weatherData.dados.previsao
+      }}
+    />
+  </main>
+)
 }

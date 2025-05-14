@@ -32,20 +32,19 @@ export interface WeatherResponse {
  * Busca o clima no backend Laravel
  * Retorna apenas json.dados que tem o formato WeatherResponse
  */
-export async function fetchWeather(
-  lat: number,
-  lon: number,
-  dias: number
-): Promise<WeatherResponse> {
-  const base = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/"
-  const url = `${base}/weather?lat=${lat}&lon=${lon}&dias=${dias}`
-  const res = await fetch(url, { headers: { Accept: "application/json" } })
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}`)
+export const fetchWeather = async (lat: number, lon: number, days: number) => {
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/weather?lat=${lat}&lon=${lon}&dias=${days}`
+    )
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    
+    return await response.json() as WeatherData // Tipagem direta
+  } catch (error) {
+    console.error("Erro na requisição:", error)
+    throw error
   }
-  const json = await res.json()
-  if (!json.sucesso) {
-    throw new Error(json.erro || "Erro na API")
-  }
-  return json.dados as WeatherResponse
 }

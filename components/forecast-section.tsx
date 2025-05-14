@@ -7,16 +7,14 @@ import { ptBR } from "date-fns/locale"
 import { getWeatherIcon } from "@/lib/weather-utils"
 
 interface ForecastDay {
-  date: string
-  day: {
-    condition: {
-      code: number
-      text: string
-    }
-    maxtemp_c: number
-    mintemp_c: number
-  }
-  hour: Array<{
+  data: string  // Alterado para corresponder à API
+  condicao: string
+  icone: string
+  temp_max: number
+  temp_min: number
+  chance_chuva: number
+  precipitacao_mm: number
+  hour?: Array<{ // Adicionado campo hour se necessário
     time: string
     temp_c: number
     condition: {
@@ -49,13 +47,18 @@ export default function ForecastSection({
     show: { opacity: 1, y: 0 }
   }
 
-  // Verificação de segurança para dados ausentes
   if (!forecast || forecast.length === 0) {
     return (
       <div className="text-center py-4 text-slate-500 dark:text-slate-400">
         Dados de previsão não disponíveis
       </div>
     )
+  }
+
+  // Função segura para parse de datas
+  const parseDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return isNaN(date.getTime()) ? new Date() : date
   }
 
   return (
@@ -66,21 +69,24 @@ export default function ForecastSection({
       className="space-y-4"
     >
       {forecast.map((day, index) => {
-        const dateObj = new Date(day.date)
+        const dateObj = parseDate(day.data) // Usando data da API
         const formattedDate = format(dateObj, "EEEE, d 'de' MMMM", { locale: ptBR })
-        const WeatherIcon = getWeatherIcon(day.day.condition.code)
+        
+        // Extrai código do ícone da URL da API
+        const iconCode = parseInt(day.icone.split('/').pop()?.split('.')[0] || '1000')
+        const WeatherIcon = getWeatherIcon(iconCode)
 
         const maxTemp = unit === "celsius"
-          ? `${Math.round(day.day.maxtemp_c)}°C`
-          : `${Math.round((day.day.maxtemp_c * 9) / 5 + 32)}°F`
+          ? `${Math.round(day.temp_max)}°C`
+          : `${Math.round((day.temp_max * 9) / 5 + 32)}°F`
 
         const minTemp = unit === "celsius"
-          ? `${Math.round(day.day.mintemp_c)}°C`
-          : `${Math.round((day.day.mintemp_c * 9) / 5 + 32)}°F`
+          ? `${Math.round(day.temp_min)}°C`
+          : `${Math.round((day.temp_min * 9) / 5 + 32)}°F`
 
         return (
           <motion.div
-            key={day.date}
+            key={day.data}
             variants={item}
             className="bg-white dark:bg-slate-800 rounded-xl shadow-md overflow-hidden"
           >
@@ -91,7 +97,7 @@ export default function ForecastSection({
                     {index === 0 ? "Hoje" : formattedDate}
                   </h3>
                   <p className="text-sm text-slate-500 dark:text-slate-400">
-                    {day.day.condition.text}
+                    {day.condicao}
                   </p>
                 </div>
 
@@ -108,14 +114,14 @@ export default function ForecastSection({
                 </div>
               </div>
 
-              {showDetails && (
+              {showDetails && day.hour && (
                 <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                   <div className="flex overflow-x-auto pb-2 -mx-4 px-4 space-x-4">
                     {day.hour
-                      ?.filter((_, idx) => idx % 3 === 0)
+                      .filter((_, idx) => idx % 3 === 0)
                       .map((hour, idx) => {
-                        const hourTime = new Date(hour.time).getHours()
-                        const formattedTime = `${hourTime}:00`
+                        const hourTime = parseDate(hour.time)
+                        const formattedTime = format(hourTime, "HH':'mm", { locale: ptBR })
                         const HourIcon = getWeatherIcon(hour.condition.code)
 
                         const hourTemp = unit === "celsius"
